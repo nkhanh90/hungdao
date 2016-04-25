@@ -1,0 +1,49 @@
+<?php
+
+/*
+ * To change this license header, choose License Headers in Project Properties.
+ * To change this template file, choose Tools | Templates
+ * and open the template in the editor.
+ */
+
+function hungdao_preprocess_block(&$variables) {
+  if ($variables['elements']['#block']->module === 'bean' && ($variables['elements']['#block']->delta === "front-page-slider" || $variables['elements']['#block']->delta === "accordion")) {
+    $obj = reset($variables['elements']['bean']);
+    $sliders = $obj['#entity']->field_slider_items['und'];
+    $bean_slider = [];
+    foreach ($sliders as $value) {
+      $slider = field_collection_field_get_entity($value);
+      $bean_slider[] = array(
+        'title' => $slider->field_slider_title['und'][0]['value'],
+        'photo' => $slider->field_slider_photo['und'][0]['uri'] ,
+        'link' => $slider->field_slider_link['und'][0]['url'],
+        'body' => $slider->field_slider_body['und'][0]['value'],
+      );
+    }
+    drupal_add_library('system', 'ui.tabs');
+    $variables['bean_slider'] = $bean_slider;
+  }
+  
+}
+
+function hungdao_page_alter(&$page) {
+  $breadcrumb = array();
+  $breadcrumb[] = l(t('Home'), NULL);
+  $node = menu_get_object();
+  if ($node) {
+    switch ($node->type) {
+      case 'article':
+        $breadcrumb[] = l('Tin tức', "news");
+        $breadcrumb[] = $node->title;
+        break;
+      default:
+        $breadcrumb[] = $node->title;
+    }
+  }
+  else {
+    $breadcrumb[] = drupal_get_title();
+  }
+  if (isset($breadcrumb) && !drupal_is_front_page()) {
+    drupal_set_breadcrumb($breadcrumb);
+  }
+}
